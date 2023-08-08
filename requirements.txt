@@ -1,0 +1,5 @@
+beautifulsoup4==4.11.2
+dateparser==1.1.8
+pandarallel==1.6.4
+pandas==1.5.3
+tqdm==4.64.1
