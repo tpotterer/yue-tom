@@ -1,10 +1,10 @@
 import torch.nn as nn
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 import torch
-from model.positional_encoder import PositionalEncoder
+from model.transcript.components.positional_encoder import PositionalEncoder
 
 class ConferenceEncoder(nn.Module):
-    def __init__(self, transformer_hidden_size=128, nhead=4, num_layers=4, max_length=256, dropout=0.1):
+    def __init__(self, transformer_hidden_size=128, nhead=2, num_layers=4, max_length=256, dropout=0.1):
         super(ConferenceEncoder, self).__init__()
         
         self.pos_enc = PositionalEncoder(transformer_hidden_size, max_len=max_length)
@@ -17,6 +17,6 @@ class ConferenceEncoder(nn.Module):
     def forward(self, x):
         # truncate to max tokens
         x = x[:self.max_length,:]
-        x = self.document_transformer(x).mean(dim=0)
+        x = self.document_transformer(x).mean(dim=1)
         
         return x

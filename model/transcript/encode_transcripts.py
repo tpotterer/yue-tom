@@ -8,7 +8,7 @@ import torch
 tqdm.pandas()
 
 def main(args):
-    data = pd.read_pickle(args.input_path).sample(3)
+    data = pd.read_pickle(args.input_path)
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -17,19 +17,20 @@ def main(args):
     model.to(device)
     
     def embed_row(row):
-        (utterance_tokens, role_tokens, part_tokens) = get_tokens(row['transcript'], row['company_participants'], row['other_participants'], tokeniser, max_num_utterances=args.max_transcript_length)
-        (utterance_tokens, role_tokens, part_tokens) = utterance_tokens.to(device), role_tokens.to(device), part_tokens.to(device)
-        
-        utterance_emb = model(utterance_tokens).pooler_output
-        
-        row['utterance_emb'] = utterance_emb.detach().numpy()
-        row['role_tokens'] = role_tokens.detach().numpy()
-        row['part_tokens'] = part_tokens.detach().numpy()
+        with torch.no_grad():
+            (utterance_tokens, role_tokens, part_tokens) = get_tokens(row['transcript'], row['company_participants'], row['other_participants'], tokeniser, max_num_utterances=args.max_transcript_length)
+            (utterance_tokens, role_tokens, part_tokens) = utterance_tokens.to(device), role_tokens.to(device), part_tokens.to(device)
+            
+            utterance_emb = model(utterance_tokens).pooler_output
+            
+            row['utterance_emb'] = utterance_emb.detach().cpu().numpy()
+            row['role_tokens'] = role_tokens.detach().cpu().numpy()
+            row['part_tokens'] = part_tokens.detach().cpu().numpy()
         
         return row
         
     data = data.progress_apply(embed_row, axis=1)
-    
+
     data.to_pickle(args.output_path)
 
 if __name__ == '__main__':
